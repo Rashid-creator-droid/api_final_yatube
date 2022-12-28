@@ -13,47 +13,54 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
+    author = SlugRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+        slug_field='username',
+    )
 
     class Meta:
-        fields = '__all__'
         model = Post
+        fields = ('id', 'text', 'pub_date', 'author', 'image', 'group')
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        read_only=True,
+        slug_field='username',
     )
 
     class Meta:
-        fields = '__all__'
         model = Comment
+        fields = ('id', 'author', 'post', 'text', 'created')
+        read_only_fields = ('post',)
 
 
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
-        slug_field='username',
         read_only=True,
-        default=serializers.CurrentUserDefault()
-    )
-    author = serializers.SlugRelatedField(
         slug_field='username',
-        queryset=User.objects.all()
+        default=serializers.CurrentUserDefault(),
+    )
+    following = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=User.objects.all(),
     )
 
     def validate(self, data):
-        """Проверяем, что не подписываемся на самого себя."""
-        if self.context['request'].user != data.get('author'):
-            return data
-        raise serializers.ValidationError("Нельзя подписаться на самого себя")
+        user = self.context['request'].user
+        if user == data.get('following'):
+            raise serializers.ValidationError(
+                f'Ошибка подписки на {data.get("following")}'
+            )
+        return data
 
     class Meta:
-        fields = ('user', 'author')
         model = Follow
+        fields = ('user', 'following')
         validators = [
             UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
-                fields=['user', 'author']
+                fields=('user', 'following'),
             )
         ]
-
