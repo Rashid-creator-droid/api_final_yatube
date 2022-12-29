@@ -13,7 +13,11 @@ from api.serializers import (
 from posts.models import Group, Post
 
 
-class FollowGetOrPostViewSet(ListModelMixin, CreateModelMixin):
+class FollowGetOrPostViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    viewsets.GenericViewSet
+):
     pass
 
 
