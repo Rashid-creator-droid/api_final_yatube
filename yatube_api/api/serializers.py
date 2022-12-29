@@ -47,14 +47,6 @@ class FollowSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
     )
 
-    def validate(self, data):
-        user = self.context['request'].user
-        if user == data.get('following'):
-            raise serializers.ValidationError(
-                f'Ошибка подписки на {data.get("following")}'
-            )
-        return data
-
     class Meta:
         model = Follow
         fields = ('user', 'following')
@@ -64,3 +56,11 @@ class FollowSerializer(serializers.ModelSerializer):
                 fields=('user', 'following'),
             )
         ]
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user == data.get('following'):
+            raise serializers.ValidationError(
+                f'Ошибка подписки на {data.get("following")}'
+            )
+        return data
